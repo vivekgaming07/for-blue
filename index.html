@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>blue, do you love me? 💕</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -17,7 +20,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif;
       background: url('assets/background.png') center / cover no-repeat scroll;
       overflow-x: hidden;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -53,7 +56,8 @@
     }
 
     .name {
-      font-size: clamp(1.15rem, 4.5vw, 1.4rem);
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(1.25rem, 5vw, 1.6rem);
       color: #fff;
       font-weight: 600;
       margin-bottom: 0.5rem;
@@ -66,6 +70,7 @@
     }
 
     h1 {
+      font-family: 'Pacifico', cursive;
       font-size: clamp(1.5rem, 6vw, 2rem);
       color: #fff;
       text-shadow: 0 2px 8px rgba(173, 216, 230, 0.8);
@@ -127,7 +132,8 @@
       box-shadow: 0 4px 15px rgba(255, 182, 193, 0.5);
       position: relative;
       z-index: 10;
-      transition: left 0.2s ease, top 0.2s ease;
+      transition: left 0.2s ease, top 0.2s ease, transform 0.2s ease;
+      min-width: 120px;
     }
 
     #no-btn.escaped {
@@ -148,6 +154,74 @@
 
     .message.show {
       display: block;
+    }
+
+    #hug-btn {
+      display: none;
+      margin-top: 1.25rem;
+      background: #fff;
+      color: #FFB6C1;
+      box-shadow: 0 4px 15px rgba(255, 182, 193, 0.5);
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    #hug-btn.show {
+      display: inline-block;
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    #hug-btn:active {
+      transform: scale(0.95);
+    }
+
+    .hug-popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(255, 182, 193, 0.85);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      animation: hugFadeIn 0.4s ease forwards;
+    }
+
+    .hug-popup.show {
+      display: flex;
+    }
+
+    .hug-emoji {
+      font-size: clamp(4rem, 20vw, 7rem);
+      animation: hugSqueeze 0.6s ease infinite alternate;
+    }
+
+    .hug-text {
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(1.4rem, 5.5vw, 2rem);
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(173, 216, 230, 0.9);
+      max-width: 90vw;
+      line-height: 1.4;
+    }
+
+    .hug-close {
+      margin-top: 0.5rem;
+      background: #ADD8E6;
+      color: #fff;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    @keyframes hugFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes hugSqueeze {
+      from { transform: scale(1); }
+      to { transform: scale(1.15); }
     }
 
     @keyframes fadeIn {
@@ -238,7 +312,18 @@
     </div>
 
     <p class="message" id="message">I love you moreeeee, blue 💖</p>
+    <button id="hug-btn">Send me a hug 🤗</button>
   </div>
+
+  <div class="hug-popup" id="hug-popup">
+    <span class="hug-emoji">🤗</span>
+    <p class="hug-text" id="hug-text">consider yourself hugged, bebu</p>
+    <button class="hug-close" id="hug-close">okay 🩵</button>
+  </div>
+
+  <audio id="bg-music" loop preload="auto" playsinline>
+    <source src="assets/song.mp3" type="audio/mpeg">
+  </audio>
 
   <script>
     const yesBtn = document.getElementById('yes-btn');
@@ -247,12 +332,48 @@
     const buttons = document.getElementById('buttons');
     const hearts = document.getElementById('hearts');
     const confetti = document.getElementById('confetti');
+    const hugBtn = document.getElementById('hug-btn');
+    const hugPopup = document.getElementById('hug-popup');
+    const hugText = document.getElementById('hug-text');
+    const hugClose = document.getElementById('hug-close');
+    const bgMusic = document.getElementById('bg-music');
 
     const petNames = ['nona', 'nonu', 'bebu', 'bubu', 'love', 'darling', 'janu'];
     const photos = ['assets/background.png', 'assets/photo2.jpg', 'assets/photo3.jpg'];
     const confettiColors = ['#FFB6C1', '#ADD8E6', '#fff', '#ff8fab'];
+    const noTexts = ['No', 'sure?', 'really?', 'think again', 'nice try', 'yes is right there', 'nope 😏', 'just say yes'];
+    const hugMessages = [
+      'consider yourself hugged, bebu',
+      'sending the biggest hug to my janu 🤗',
+      'squish squish — love you, bubu',
+      'hug delivered to blue 🩵',
+      'warm hug from your nonu 💕'
+    ];
 
     let noAttempts = 0;
+    let musicStarted = false;
+    bgMusic.volume = 0.15;
+
+    function startMusic() {
+      if (musicStarted) return;
+      bgMusic.play().then(() => {
+        musicStarted = true;
+      }).catch(() => {});
+    }
+
+    startMusic();
+    document.addEventListener('pointerdown', startMusic, { once: true });
+    document.addEventListener('keydown', startMusic, { once: true });
+
+    function updateNoText() {
+      const index = Math.min(noAttempts, noTexts.length - 1);
+      noBtn.textContent = noTexts[index];
+    }
+
+    function growYesButton() {
+      const scale = 1 + Math.min(noAttempts * 0.06, 0.5);
+      yesBtn.style.transform = `scale(${scale})`;
+    }
 
     function moveNoButton() {
       const btnRect = noBtn.getBoundingClientRect();
@@ -280,24 +401,47 @@
 
       yesBtn.classList.add('highlight');
       noAttempts++;
+      updateNoText();
+      growYesButton();
     }
 
-    noBtn.addEventListener('mouseenter', moveNoButton);
+    noBtn.addEventListener('mouseenter', () => {
+      startMusic();
+      moveNoButton();
+    });
     noBtn.addEventListener('touchstart', (e) => {
+      startMusic();
       e.preventDefault();
       moveNoButton();
     }, { passive: false });
     noBtn.addEventListener('click', (e) => {
+      startMusic();
       e.preventDefault();
       moveNoButton();
     });
 
     yesBtn.addEventListener('click', () => {
+      startMusic();
       buttons.classList.add('hidden');
       message.classList.add('show');
+      hugBtn.classList.add('show');
       yesBtn.classList.remove('highlight');
       spawnHearts();
       spawnConfetti();
+    });
+
+    hugBtn.addEventListener('click', () => {
+      hugText.textContent = hugMessages[Math.floor(Math.random() * hugMessages.length)];
+      hugPopup.classList.add('show');
+      spawnHearts();
+    });
+
+    hugClose.addEventListener('click', () => {
+      hugPopup.classList.remove('show');
+    });
+
+    hugPopup.addEventListener('click', (e) => {
+      if (e.target === hugPopup) hugPopup.classList.remove('show');
     });
 
     function spawnConfetti() {
